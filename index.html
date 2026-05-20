@@ -1,341 +1,543 @@
-
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>3dsurvey Pilot 시뮬레이터</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,sans-serif;}
-.mc{background:#161e2b;border:1.5px solid #253040;border-radius:10px;padding:12px;cursor:pointer;margin-bottom:9px;transition:border-color .2s,background .2s}
-.mc:hover{border-color:#1d9e75}.mc.sel{border-color:#1d9e75;background:#0b1e16}
-.pr{margin-bottom:14px}
-.plab{color:#5a6880;font-size:11px;display:flex;justify-content:space-between;margin-bottom:5px}
-.pv{color:#1d9e75;font-weight:500}
-input[type=range]{width:100%;accent-color:#1d9e75;height:18px}
-.bp{background:#1d9e75;color:#fff;border:none;border-radius:10px;padding:13px;font-size:13px;cursor:pointer;font-weight:500}
-.bs{background:transparent;color:#8a9ab0;border:1.5px solid #2a3a50;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:12px;transition:background .2s}
-.bs:hover{background:#1a2230}
-.srow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:.5px solid #1e2a38}
-.sk{color:#5a6880;font-size:12px}.sv{color:#dde6f0;font-size:12px;font-weight:500}
-.citem{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:.5px solid #1a2230;cursor:pointer;}
+:root{
+  --bg:#0c1118; --bg2:#0e151f; --card:#161e2b;
+  --border:#253040; --border2:#1a2230;
+  --green:#1d9e75; --green-dim:#0b1e16; --green-bg:#071810;
+  --text:#dde6f0; --text2:#5a6880; --text3:#3d5060;
+  --accent:#9FE1CB;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;min-height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,'Helvetica Neue',sans-serif;font-size:16px;overflow-x:hidden;}
+
+/* 앱 */
+#app{max-width:540px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;}
+
+/* 헤더 */
+.app-header{background:var(--bg);border-bottom:1px solid var(--border2);
+  padding:max(env(safe-area-inset-top),12px) 20px 14px;
+  display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+.app-header-ico{font-size:26px;}
+.app-header-title{font-size:17px;font-weight:700;color:var(--text);}
+.app-header-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* 단계 점 */
+.step-dots{display:flex;gap:6px;justify-content:center;padding:12px 0 6px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--border);transition:all .3s;}
+.dot.active{width:22px;border-radius:3px;background:var(--green);}
+.dot.done{background:var(--green);}
+
+/* 화면 */
+.screen{display:none;padding:16px 20px 110px;flex:1;}
+.screen.active{display:block;}
+.sec-title{font-size:19px;font-weight:700;margin-bottom:4px;}
+.sec-sub{font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.5;}
+
+/* 미션 카드 */
+.mc{background:var(--card);border:2px solid var(--border);border-radius:16px;
+  padding:16px;cursor:pointer;margin-bottom:12px;transition:border-color .2s,background .2s;
+  -webkit-user-select:none;user-select:none;}
+.mc:active{opacity:.85;}
+.mc.sel{border-color:var(--green);background:var(--green-dim);}
+.mc-row{display:flex;align-items:center;gap:14px;}
+.mc-ico{width:48px;height:48px;background:var(--green-bg);border-radius:13px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;}
+.mc-name{font-size:16px;font-weight:700;color:var(--text);}
+.mc-desc{font-size:13px;color:var(--text2);margin-top:3px;}
+
+/* 그리드 서브 */
+.grid-sub{display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border2);}
+.grid-sub-label{font-size:13px;color:var(--text2);font-weight:600;margin-bottom:10px;}
+.gtabs{display:flex;border-radius:13px;overflow:hidden;border:2px solid var(--border);background:var(--bg2);}
+.gtab{flex:1;padding:14px 8px;font-size:14px;font-weight:600;border:none;
+  background:transparent;color:var(--text2);cursor:pointer;text-align:center;
+  transition:all .25s;display:flex;flex-direction:column;align-items:center;gap:6px;
+  -webkit-user-select:none;user-select:none;}
+.gtab:first-child{border-right:1px solid var(--border);}
+.gtab .gico{font-size:24px;}
+.gtab.on{background:var(--green-dim);color:var(--green);}
+.grid-tip{background:var(--green-bg);border:1px solid #1a3025;border-radius:11px;
+  padding:13px 15px;margin-top:10px;font-size:13px;color:var(--accent);line-height:1.6;}
+
+/* 팁 박스 */
+.tip-box{background:var(--green-bg);border:1.5px solid var(--green);border-radius:13px;
+  padding:13px 15px;margin-top:12px;font-size:13px;color:var(--accent);line-height:1.6;display:none;}
+
+/* 슬라이더 */
+.pr{margin-bottom:22px;}
+.plab{font-size:13px;color:var(--text2);display:flex;justify-content:space-between;margin-bottom:8px;}
+.pval{color:var(--green);font-weight:700;font-size:15px;}
+input[type=range]{width:100%;accent-color:var(--green);height:24px;cursor:pointer;}
+.pr-hint{font-size:11px;color:var(--text3);margin-top:5px;line-height:1.4;}
+
+/* 카메라 각도 */
+.cam-box{background:var(--green-bg);border-radius:13px;padding:14px 16px;
+  margin-top:8px;display:flex;align-items:center;gap:16px;}
+.cam-diag{width:54px;height:54px;position:relative;flex-shrink:0;}
+.cam-diag .cvert{position:absolute;left:26px;top:2px;width:2px;height:22px;background:#1a2a38;border-radius:1px;}
+.cam-diag .carm{position:absolute;left:26px;top:24px;width:2px;height:24px;background:var(--green);
+  border-radius:1px;transform-origin:top center;transform:rotate(0deg);transition:transform .25s;}
+.cam-diag .cpivot{position:absolute;left:23px;top:21px;width:7px;height:7px;background:var(--green);border-radius:50%;}
+.cam-diag .cfloor{position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--border);border-radius:1px;}
+#camtip{font-size:12px;color:var(--accent);line-height:1.6;flex:1;}
+
+/* GSD 박스 */
+.gsd-box{background:var(--green-bg);border-radius:13px;padding:14px 16px;
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;}
+.gsd-lbl{font-size:11px;color:var(--text3);}
+.gsd-val{font-size:17px;font-weight:700;color:var(--green);margin-top:4px;}
+.gsd-divider{border-left:1px solid var(--border2);padding-left:14px;}
+
+/* 체크리스트 */
+.citem{display:flex;align-items:center;gap:14px;padding:15px 0;
+  border-bottom:1px solid var(--border2);cursor:pointer;
+  -webkit-user-select:none;user-select:none;}
 .citem:last-child{border-bottom:none;}
-.cicon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .25s;border:1.5px solid #253040;background:#0e151f;}
-.cicon.ok{background:#0b1e16;border-color:#1d9e75;}
-.cicon i{font-size:16px;color:#3d5060;transition:color .25s;}
-.cicon.ok i{color:#1d9e75;}
-.ctxt{font-size:12px;color:#5a6880;flex:1;line-height:1.4;}
-.ctxt.ok{color:#dde6f0;}
-.cbadge{font-size:10px;padding:2px 7px;border-radius:20px;flex-shrink:0;background:#1a2230;color:#3d5060;}
-.cbadge.ok{background:#0b1e16;color:#1d9e75;}
-/* 그리드 타입 버튼 - 개선 */
-.gtab{flex:1;padding:10px 4px;font-size:12px;font-weight:500;border:2px solid #2a3a50;background:#0e1520;color:#6a7a90;cursor:pointer;transition:all .25s;text-align:center;line-height:1.4;}
-.gtab:first-child{border-radius:9px 0 0 9px;}
-.gtab:last-child{border-radius:0 9px 9px 0;border-left:none;}
-.gtab.on{background:#0d2218;border-color:#1d9e75;color:#1d9e75;}
-.gtab i{display:block;font-size:16px;margin-bottom:3px;}
-/* 페이즈 버튼 */
-.ph-btn{flex:1;padding:7px 4px;font-size:10px;border-radius:7px;border:1px solid #253040;background:#0c1118;color:#3d5060;text-align:center;transition:all .4s;line-height:1.4;}
-.ph-btn.active{border-color:#1d9e75;background:#071810;color:#1d9e75;font-weight:600;}
+.cico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;border:2px solid var(--border);background:var(--bg2);
+  transition:all .25s;font-size:20px;}
+.cico.ok{background:var(--green-dim);border-color:var(--green);}
+.ctxt{flex:1;}
+.ctxt-name{font-size:14px;font-weight:600;color:var(--text2);transition:color .2s;}
+.ctxt-name.ok{color:var(--text);}
+.ctxt-desc{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4;}
+.cbadge{font-size:11px;padding:5px 11px;border-radius:20px;background:var(--border2);
+  color:var(--text3);flex-shrink:0;transition:all .2s;white-space:nowrap;font-weight:600;}
+.cbadge.ok{background:var(--green-dim);color:var(--green);}
+
+/* 진행바 */
+.prog-wrap{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.prog-bar{flex:1;background:var(--border2);border-radius:4px;overflow:hidden;}
+.prog-bar.h5{height:5px;} .prog-bar.h6{height:6px;}
+.prog-fill{height:100%;background:var(--green);border-radius:4px;transition:width .3s;}
+.prog-txt{font-size:14px;font-weight:700;color:var(--green);}
+
+/* 요약 */
+.sum-card{background:var(--green-bg);border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border2);}
+.srow:last-child{border-bottom:none;}
+.sk{font-size:13px;color:var(--text2);}
+.sv{font-size:14px;font-weight:700;color:var(--text);}
+
+/* 수정 버튼 */
+.edit-btns{display:flex;gap:8px;margin-bottom:14px;}
+.edit-btn{flex:1;padding:12px 6px;font-size:12px;font-weight:600;border:2px solid var(--border);
+  border-radius:12px;background:transparent;color:var(--text2);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:5px;transition:background .2s;}
+.edit-btn .eico{font-size:20px;}
+.edit-btn:active{background:var(--border2);}
+
+/* 경고 */
+.warn-box{background:#160b06;border:1px solid #3a1a08;border-radius:13px;padding:14px 16px;margin-bottom:16px;}
+.warn-title{font-size:13px;font-weight:700;color:#e09060;margin-bottom:5px;}
+.warn-desc{font-size:12px;color:#9a5030;line-height:1.6;}
+
+/* 하단 바 */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent,var(--bg) 28%);
+  padding:20px 20px max(env(safe-area-inset-bottom),16px);
+  max-width:540px;margin:0 auto;}
+.btn-primary{width:100%;padding:18px;font-size:16px;font-weight:700;background:var(--green);
+  color:#fff;border:none;border-radius:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .2s;}
+.btn-primary:active{opacity:.8;}
+.btn-primary.dark{background:#085041;}
+.btn-primary:disabled{opacity:.33;cursor:not-allowed;}
+.btn-back{background:transparent;color:var(--text2);border:2px solid var(--border);
+  border-radius:12px;padding:12px 18px;cursor:pointer;font-size:14px;font-weight:600;
+  display:flex;align-items:center;gap:6px;white-space:nowrap;transition:background .2s;}
+.btn-back:active{background:var(--border2);}
+.btn-row{display:flex;gap:10px;}
+
+/* 비행 시뮬 */
+.phase-tabs{display:flex;gap:8px;margin-bottom:14px;}
+.ph-btn{flex:1;padding:11px 6px;font-size:12px;font-weight:600;border-radius:12px;
+  border:2px solid var(--border);background:var(--bg2);color:var(--text3);text-align:center;
+  transition:all .4s;}
+.ph-btn .phico{display:block;font-size:20px;margin-bottom:4px;}
+.ph-btn.active{border-color:var(--green);background:var(--green-dim);color:var(--green);}
 .ph-btn.done{border-color:#0b4030;background:#040e0a;color:#2d7060;}
+
 /* 탑뷰 맵 */
-#topmap{position:relative;width:100%;height:200px;background:#0d1a0d;border-radius:10px;overflow:hidden;margin-bottom:12px;border:1px solid #1a2e1a;}
-.mapgrid-h,.mapgrid-v{position:absolute;background:#1a2a1a;}
-.mapgrid-h{left:0;right:0;height:1px;}
-.mapgrid-v{top:0;bottom:0;width:1px;}
-#homespot{position:absolute;width:14px;height:14px;border-radius:50%;background:#1d9e7533;border:2px solid #1d9e75;bottom:20px;left:50%;transform:translateX(-50%);}
-#homeH{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-size:8px;color:#1d9e75;margin-top:2px;white-space:nowrap;}
-#droneSvg{position:absolute;transition:transform .08s linear;}
+#topmap{position:relative;width:100%;padding-bottom:67%;background:#0d1a0d;
+  border-radius:15px;overflow:hidden;margin-bottom:14px;border:1px solid #1a2e1a;}
+#topmapInner{position:absolute;top:0;left:0;right:0;bottom:0;}
+.mgrid{position:absolute;background:#1a2a1a;}
+.mgrid-h{left:0;right:0;height:1px;}
+.mgrid-v{top:0;bottom:0;width:1px;}
 #missionSvg{position:absolute;top:0;left:0;width:100%;height:100%;}
-#mapLabel{position:absolute;top:6px;left:8px;font-size:9px;color:#1d9e75;background:#071810cc;padding:2px 8px;border-radius:10px;font-weight:600;}
-#scaleCircle{position:absolute;bottom:0;left:0;right:0;top:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+#droneTop{position:absolute;transform:translate(-50%,-50%) scale(0.08);
+  transition:left .09s linear,top .09s linear,transform .12s linear;}
+#mapLabel{position:absolute;top:9px;left:11px;font-size:10px;color:var(--green);
+  font-weight:700;background:#071810dd;padding:4px 11px;border-radius:20px;}
+#phaseMapTxt{position:absolute;top:9px;right:11px;font-size:10px;color:var(--green);
+  font-weight:700;background:#071810dd;padding:4px 11px;border-radius:20px;}
+
 /* 통계 */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;}
-.stat-box{background:#040e0a;border-radius:7px;padding:8px 10px;}
-.stat-lbl{color:#3d5060;font-size:9px;}
-.stat-val{color:#1d9e75;font-size:13px;font-weight:600;margin-top:2px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px;}
+.stat-box{background:#040e0a;border-radius:12px;padding:13px 15px;}
+.stat-lbl{font-size:11px;color:var(--text3);}
+.stat-val{font-size:18px;font-weight:700;color:var(--green);margin-top:4px;}
+
+.mission-prog{margin-bottom:14px;}
+.mission-prog-top{display:flex;justify-content:space-between;margin-bottom:6px;}
+.mission-prog-label{font-size:13px;color:var(--text2);}
+.mission-prog-pct{font-size:14px;font-weight:700;color:var(--green);}
+
+.sim-btns{display:flex;gap:10px;}
+.sim-btn{flex:1;padding:14px;font-size:13px;font-weight:600;border:2px solid var(--border);
+  border-radius:12px;background:transparent;color:var(--text2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;}
+.sim-btn:active{background:var(--border2);}
+
+#doneMsg{display:none;text-align:center;padding:20px;background:var(--green-bg);
+  border:2px solid var(--green);border-radius:15px;margin-bottom:14px;}
+
+/* 완료 메시지 */
+.all-ok-box{display:none;text-align:center;padding:18px;background:var(--green-bg);
+  border:2px solid var(--green);border-radius:14px;margin-top:14px;}
 </style>
+</head>
+<body>
+<div id="app">
 
-<div style="display:flex;justify-content:center;padding:1.2rem 0 1rem;">
-<div style="width:330px;">
-<div style="background:#0c1118;border-radius:38px;border:3px solid #1a2230;overflow:hidden;padding-bottom:22px;">
-
-  <div style="padding:13px 24px 7px;display:flex;justify-content:space-between;align-items:center;">
-    <span style="color:#3d5060;font-size:11px;font-weight:500;">09:41</span>
-    <div style="display:flex;gap:5px;"><i class="ti ti-wifi" style="color:#3d5060;font-size:13px;"></i><i class="ti ti-battery-2" style="color:#3d5060;font-size:13px;"></i></div>
+<!-- 헤더 -->
+<div class="app-header">
+  <div class="app-header-ico">📡</div>
+  <div>
+    <div class="app-header-title">3dsurvey Pilot</div>
+    <div class="app-header-sub">미션 계획 시뮬레이터</div>
   </div>
-  <div style="padding:2px 20px 11px;display:flex;align-items:center;gap:10px;border-bottom:.5px solid #1a2230;">
-    <i class="ti ti-map-pin" style="color:#1d9e75;font-size:20px;"></i>
-    <div><div style="color:#dde6f0;font-size:14px;font-weight:500;">3dsurvey Pilot</div><div style="color:#3d5060;font-size:10px;">미션 계획 시뮬레이터</div></div>
-  </div>
-  <div style="display:flex;gap:5px;justify-content:center;padding:9px 0 5px;">
-    <div id="d1" style="width:16px;height:5px;border-radius:3px;background:#1d9e75;transition:all .3s;"></div>
-    <div id="d2" style="width:5px;height:5px;border-radius:50%;background:#253040;transition:all .3s;"></div>
-    <div id="d3" style="width:5px;height:5px;border-radius:50%;background:#253040;transition:all .3s;"></div>
-    <div id="d4" style="width:5px;height:5px;border-radius:50%;background:#253040;transition:all .3s;"></div>
-  </div>
+</div>
 
-  <div style="padding:6px 18px 0;">
+<!-- 단계 점 -->
+<div class="step-dots">
+  <div class="dot active" id="d1"></div>
+  <div class="dot" id="d2"></div>
+  <div class="dot" id="d3"></div>
+  <div class="dot" id="d4"></div>
+</div>
 
-  <!-- S1 미션유형 -->
-  <div id="s1">
-    <div style="color:#dde6f0;font-size:14px;font-weight:500;margin-bottom:2px;">미션 유형 선택</div>
-    <div style="color:#5a6880;font-size:11px;margin-bottom:13px;">어떤 영역을 매핑할까요?</div>
+<!-- ===== S1 미션 유형 ===== -->
+<div class="screen active" id="s1">
+  <div class="sec-title">미션 유형 선택</div>
+  <div class="sec-sub">어떤 영역을 매핑할까요? 카드를 눌러보세요.</div>
 
-    <div class="mc" id="mc-grid" onclick="pick('grid')">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:34px;height:34px;background:#0b1e16;border-radius:8px;display:flex;align-items:center;justify-content:center;"><i class="ti ti-grid-dots" style="color:#1d9e75;font-size:17px;"></i></div>
-        <div style="flex:1;"><div style="color:#dde6f0;font-size:12px;font-weight:500;">GRID</div><div style="color:#5a6880;font-size:10px;">직사각형 격자 비행</div></div>
+  <div class="mc" id="mc-grid" onclick="pick('grid')">
+    <div class="mc-row">
+      <div class="mc-ico">🗺️</div>
+      <div><div class="mc-name">GRID</div><div class="mc-desc">직사각형 격자 비행</div></div>
+    </div>
+    <div class="grid-sub" id="grid-sub">
+      <div class="grid-sub-label">⚙️ 그리드 타입 선택</div>
+      <div class="gtabs">
+        <button class="gtab on" id="gt-single" onclick="event.stopPropagation();setGrid('single')">
+          <span class="gico">▤</span>싱글 그리드
+        </button>
+        <button class="gtab" id="gt-double" onclick="event.stopPropagation();setGrid('double')">
+          <span class="gico">⊞</span>더블 그리드
+        </button>
       </div>
-      <!-- 그리드 타입 - 개선된 버튼 -->
-      <div id="grid-sub" style="display:none;margin-top:12px;">
-        <div style="color:#8a9ab0;font-size:11px;font-weight:500;margin-bottom:8px;"><i class="ti ti-settings" style="font-size:11px;vertical-align:-1px;margin-right:4px;"></i>그리드 타입 선택</div>
-        <div style="display:flex;border-radius:10px;overflow:hidden;">
-          <button class="gtab on" id="gt-single" onclick="event.stopPropagation();setGrid('single')">
-            <i class="ti ti-layout-rows"></i>싱글 그리드
-          </button>
-          <button class="gtab" id="gt-double" onclick="event.stopPropagation();setGrid('double')">
-            <i class="ti ti-layout-grid"></i>더블 그리드
-          </button>
-        </div>
-        <div id="grid-tip" style="background:#040e0a;border:1px solid #1a3025;border-radius:8px;padding:9px 11px;margin-top:8px;font-size:11px;color:#9FE1CB;line-height:1.6;"></div>
-      </div>
-    </div>
-
-    <div class="mc" id="mc-polygon" onclick="pick('polygon')">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:34px;height:34px;background:#0b1e16;border-radius:8px;display:flex;align-items:center;justify-content:center;"><i class="ti ti-pentagon" style="color:#1d9e75;font-size:17px;"></i></div>
-        <div><div style="color:#dde6f0;font-size:12px;font-weight:500;">POLYGON</div><div style="color:#5a6880;font-size:10px;">불규칙 형태 영역 매핑</div></div>
-      </div>
-    </div>
-    <div class="mc" id="mc-road" onclick="pick('road')">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:34px;height:34px;background:#0b1e16;border-radius:8px;display:flex;align-items:center;justify-content:center;"><i class="ti ti-road" style="color:#1d9e75;font-size:17px;"></i></div>
-        <div><div style="color:#dde6f0;font-size:12px;font-weight:500;">ROAD</div><div style="color:#5a6880;font-size:10px;">도로 · 철로 · 회랑 매핑</div></div>
-      </div>
-    </div>
-    <div class="mc" id="mc-circle" onclick="pick('circle')">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:34px;height:34px;background:#0b1e16;border-radius:8px;display:flex;align-items:center;justify-content:center;"><i class="ti ti-circle" style="color:#1d9e75;font-size:17px;"></i></div>
-        <div><div style="color:#dde6f0;font-size:12px;font-weight:500;">CIRCLE</div><div style="color:#5a6880;font-size:10px;">객체 순환 촬영 (3D 모델링)</div></div>
-      </div>
-    </div>
-
-    <div id="tip1" style="display:none;background:#071810;border:1px solid #1d9e75;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:#9FE1CB;line-height:1.5;"></div>
-    <button class="bp" id="btn1" onclick="go(2)" style="display:none;width:100%;margin-top:12px;">다음 단계 <i class="ti ti-arrow-right"></i></button>
-  </div>
-
-  <!-- S2 파라미터 -->
-  <div id="s2" style="display:none;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-      <button class="bs" onclick="go(1)" style="padding:7px 11px;white-space:nowrap;"><i class="ti ti-arrow-left"></i> 1단계</button>
-      <div><div style="color:#dde6f0;font-size:14px;font-weight:500;">비행 파라미터 설정</div><div style="color:#5a6880;font-size:10px;">슬라이더를 움직여 조정하세요</div></div>
-    </div>
-    <div class="pr">
-      <div class="plab"><span>비행 고도 (AGL)</span><span class="pv" id="valt">80m</span></div>
-      <input type="range" min="30" max="150" value="80" step="5" oninput="upd('alt',this.value)">
-      <div style="color:#3d5060;font-size:10px;margin-top:2px;">높을수록 넓은 면적 / 낮을수록 고해상도</div>
-    </div>
-    <div class="pr">
-      <div class="plab"><span>비행 속도</span><span class="pv" id="vspd">8 m/s</span></div>
-      <input type="range" min="3" max="15" value="8" step="1" oninput="upd('spd',this.value)">
-      <div style="color:#3d5060;font-size:10px;margin-top:2px;">느릴수록 흔들림 없는 선명한 사진</div>
-    </div>
-    <div class="pr">
-      <div class="plab"><span>전방 오버랩</span><span class="pv" id="vfo">80%</span></div>
-      <input type="range" min="60" max="90" value="80" step="5" oninput="upd('fo',this.value)">
-    </div>
-    <div class="pr">
-      <div class="plab"><span>측면 오버랩</span><span class="pv" id="vso">70%</span></div>
-      <input type="range" min="60" max="90" value="70" step="5" oninput="upd('so',this.value)">
-    </div>
-    <div class="pr">
-      <div class="plab"><span><i class="ti ti-camera" style="font-size:11px;vertical-align:-1px;margin-right:2px;"></i>카메라 각도</span><span class="pv" id="vang">90° (수직)</span></div>
-      <input type="range" min="45" max="90" value="90" step="5" oninput="upd('ang',this.value)">
-      <div style="background:#071810;border-radius:8px;padding:9px 12px;margin-top:6px;display:flex;align-items:center;gap:12px;">
-        <div style="width:44px;height:44px;position:relative;flex-shrink:0;">
-          <div style="position:absolute;left:21px;top:3px;width:2px;height:18px;background:#1a2a38;border-radius:1px;"></div>
-          <div id="camline" style="position:absolute;left:21px;top:21px;width:2px;height:17px;background:#1d9e75;border-radius:1px;transform-origin:top center;transform:rotate(0deg);transition:transform .25s;"></div>
-          <div style="position:absolute;left:19px;top:19px;width:6px;height:6px;background:#1d9e75;border-radius:50%;"></div>
-          <div style="position:absolute;bottom:2px;left:0;right:0;height:2px;background:#253040;border-radius:1px;"></div>
-        </div>
-        <div id="camtip" style="color:#9FE1CB;font-size:11px;line-height:1.5;"></div>
-      </div>
-    </div>
-    <div style="background:#071810;border-radius:8px;padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-      <div><div style="color:#3d5060;font-size:10px;">예상 해상도 (GSD)</div><div style="color:#1d9e75;font-size:13px;font-weight:500;" id="vgsd">2.2 cm/px</div></div>
-      <div style="border-left:.5px solid #1a2230;padding-left:12px;"><div style="color:#3d5060;font-size:10px;">촬영 간격</div><div style="color:#1d9e75;font-size:13px;font-weight:500;" id="vint">16m</div></div>
-    </div>
-    <button class="bp" onclick="go(3)" style="width:100%;">다음 단계 <i class="ti ti-arrow-right"></i></button>
-  </div>
-
-  <!-- S3 체크리스트 -->
-  <div id="s3" style="display:none;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-      <button class="bs" onclick="go(2)" style="padding:7px 11px;white-space:nowrap;"><i class="ti ti-arrow-left"></i> 2단계</button>
-      <div><div style="color:#dde6f0;font-size:14px;font-weight:500;">비행 전 상태 확인</div><div style="color:#5a6880;font-size:10px;">9개 항목 모두 OK → 미션 시작 가능</div></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px;">
-      <div style="flex:1;background:#1a2230;border-radius:4px;height:4px;overflow:hidden;">
-        <div id="cpbar" style="height:100%;background:#1d9e75;width:0%;transition:width .3s;border-radius:4px;"></div>
-      </div>
-      <span style="color:#1d9e75;font-size:11px;font-weight:500;" id="cpct">0/9</span>
-    </div>
-    <div id="clist"></div>
-    <div id="cdone" style="display:none;background:#071810;border:1px solid #1d9e75;border-radius:8px;padding:10px;text-align:center;margin-top:10px;">
-      <i class="ti ti-circle-check" style="color:#1d9e75;font-size:20px;"></i>
-      <div style="color:#1d9e75;font-size:12px;font-weight:500;margin-top:4px;">모든 항목 확인 완료! 미션 준비 OK</div>
-    </div>
-    <div style="margin-top:12px;">
-      <button class="bp" id="btn3" onclick="go(4)" style="width:100%;opacity:.35;cursor:not-allowed;" disabled>다음 단계 <i class="ti ti-arrow-right"></i></button>
+      <div class="grid-tip" id="grid-tip"></div>
     </div>
   </div>
 
-  <!-- S4 요약 -->
-  <div id="s4" style="display:none;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-      <button class="bs" onclick="go(3)" style="padding:7px 11px;white-space:nowrap;"><i class="ti ti-arrow-left"></i> 3단계</button>
-      <div><div style="color:#dde6f0;font-size:14px;font-weight:500;">미션 요약</div><div style="color:#5a6880;font-size:10px;">설정 확인 후 미션을 시작하세요</div></div>
+  <div class="mc" id="mc-polygon" onclick="pick('polygon')">
+    <div class="mc-row">
+      <div class="mc-ico">⬠</div>
+      <div><div class="mc-name">POLYGON</div><div class="mc-desc">불규칙 형태 영역 매핑</div></div>
     </div>
-    <div style="background:#071810;border-radius:10px;padding:12px;">
-      <div class="srow"><span class="sk">미션 유형</span><span class="sv" id="rm"></span></div>
-      <div class="srow" id="rgrow" style="display:none;"><span class="sk">그리드 타입</span><span class="sv" id="rgt"></span></div>
-      <div class="srow"><span class="sk">비행 고도</span><span class="sv" id="ra"></span></div>
-      <div class="srow"><span class="sk">비행 속도</span><span class="sv" id="rs"></span></div>
-      <div class="srow"><span class="sk">오버랩 (전/측)</span><span class="sv" id="ro"></span></div>
-      <div class="srow"><span class="sk">카메라 각도</span><span class="sv" id="rca"></span></div>
-      <div style="display:flex;justify-content:space-between;padding:7px 0;"><span class="sk">예상 해상도</span><span style="color:#1d9e75;font-size:12px;font-weight:500;" id="rg"></span></div>
-    </div>
-    <div style="display:flex;gap:6px;margin-top:10px;">
-      <button class="bs" onclick="go(1)" style="flex:1;font-size:11px;padding:8px 4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> 유형</button>
-      <button class="bs" onclick="go(2)" style="flex:1;font-size:11px;padding:8px 4px;"><i class="ti ti-sliders" style="font-size:12px;"></i> 파라미터</button>
-      <button class="bs" onclick="go(3)" style="flex:1;font-size:11px;padding:8px 4px;"><i class="ti ti-list-check" style="font-size:12px;"></i> 체크리스트</button>
-    </div>
-    <div style="background:#160b06;border:1px solid #3a1a08;border-radius:8px;padding:10px;margin-top:10px;">
-      <div style="color:#e09060;font-size:11px;font-weight:500;margin-bottom:3px;"><i class="ti ti-alert-triangle" style="font-size:12px;vertical-align:-2px;margin-right:3px;"></i>안전 주의사항</div>
-      <div style="color:#9a5030;font-size:11px;line-height:1.5;">앱은 장애물을 자동으로 회피하지 않습니다. 현지 드론 규정을 반드시 준수하세요.</div>
-    </div>
-    <button class="bp" onclick="fly()" style="width:100%;margin-top:12px;background:#085041;"><i class="ti ti-player-play"></i> 미션 시작</button>
   </div>
 
-  <!-- S5 비행 시뮬레이션 -->
-  <div id="s5" style="display:none;">
-    <div style="display:flex;gap:5px;margin-bottom:10px;">
-      <div class="ph-btn" id="ph1"><i class="ti ti-plane-departure" style="font-size:13px;display:block;margin-bottom:2px;"></i>이륙</div>
-      <div class="ph-btn" id="ph2"><i class="ti ti-route" style="font-size:13px;display:block;margin-bottom:2px;"></i>미션</div>
-      <div class="ph-btn" id="ph3"><i class="ti ti-plane-arrival" style="font-size:13px;display:block;margin-bottom:2px;"></i>착륙</div>
+  <div class="mc" id="mc-road" onclick="pick('road')">
+    <div class="mc-row">
+      <div class="mc-ico">🛣️</div>
+      <div><div class="mc-name">ROAD</div><div class="mc-desc">도로 · 철로 · 회랑 매핑</div></div>
     </div>
+  </div>
 
-    <!-- 탑뷰 맵 -->
-    <div id="topmap">
-      <div id="mapLabel">📡 탑뷰</div>
-      <!-- 격자 배경 -->
-      <div class="mapgrid-h" style="top:25%;opacity:.4;"></div>
-      <div class="mapgrid-h" style="top:50%;opacity:.4;"></div>
-      <div class="mapgrid-h" style="top:75%;opacity:.4;"></div>
-      <div class="mapgrid-v" style="left:25%;opacity:.4;"></div>
-      <div class="mapgrid-v" style="left:50%;opacity:.4;"></div>
-      <div class="mapgrid-v" style="left:75%;opacity:.4;"></div>
-      <!-- 미션 경로 SVG -->
-      <svg id="missionSvg" viewBox="0 0 290 200" style="position:absolute;top:0;left:0;width:100%;height:100%;">
-        <!-- 미션 영역 표시 -->
+  <div class="mc" id="mc-circle" onclick="pick('circle')">
+    <div class="mc-row">
+      <div class="mc-ico">🔄</div>
+      <div><div class="mc-name">CIRCLE</div><div class="mc-desc">객체 순환 촬영 (3D 모델링)</div></div>
+    </div>
+  </div>
+
+  <div class="tip-box" id="tip1"></div>
+
+  <div class="bottom-bar">
+    <button class="btn-primary" id="btn1" onclick="go(2)" disabled>
+      다음 단계 →
+    </button>
+  </div>
+</div>
+
+<!-- ===== S2 파라미터 ===== -->
+<div class="screen" id="s2">
+  <div class="sec-title">비행 파라미터 설정</div>
+  <div class="sec-sub">슬라이더를 움직여 값을 조정하세요</div>
+
+  <div class="pr">
+    <div class="plab"><span>🛫 비행 고도 (AGL)</span><span class="pval" id="valt">80m</span></div>
+    <input type="range" min="30" max="150" value="80" step="5" oninput="upd('alt',this.value)">
+    <div class="pr-hint">높을수록 넓은 면적 커버 / 낮을수록 고해상도</div>
+  </div>
+  <div class="pr">
+    <div class="plab"><span>💨 비행 속도</span><span class="pval" id="vspd">8 m/s</span></div>
+    <input type="range" min="3" max="15" value="8" step="1" oninput="upd('spd',this.value)">
+    <div class="pr-hint">느릴수록 흔들림 없는 선명한 사진 획득</div>
+  </div>
+  <div class="pr">
+    <div class="plab"><span>↔️ 전방 오버랩</span><span class="pval" id="vfo">80%</span></div>
+    <input type="range" min="60" max="90" value="80" step="5" oninput="upd('fo',this.value)">
+  </div>
+  <div class="pr">
+    <div class="plab"><span>↕️ 측면 오버랩</span><span class="pval" id="vso">70%</span></div>
+    <input type="range" min="60" max="90" value="70" step="5" oninput="upd('so',this.value)">
+    <div class="pr-hint">오버랩 높을수록 품질↑, 비행 시간↑</div>
+  </div>
+  <div class="pr">
+    <div class="plab"><span>📷 카메라 각도</span><span class="pval" id="vang">90° (수직)</span></div>
+    <input type="range" min="45" max="90" value="90" step="5" oninput="upd('ang',this.value)">
+    <div class="cam-box">
+      <div class="cam-diag">
+        <div class="cvert"></div>
+        <div class="carm" id="camline"></div>
+        <div class="cpivot"></div>
+        <div class="cfloor"></div>
+      </div>
+      <div id="camtip"></div>
+    </div>
+  </div>
+
+  <div class="gsd-box">
+    <div>
+      <div class="gsd-lbl">예상 해상도 (GSD)</div>
+      <div class="gsd-val" id="vgsd">2.2 cm/px</div>
+    </div>
+    <div class="gsd-divider">
+      <div class="gsd-lbl">촬영 간격</div>
+      <div class="gsd-val" id="vint">16m</div>
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="btn-row">
+      <button class="btn-back" onclick="go(1)">← 1단계</button>
+      <button class="btn-primary" onclick="go(3)" style="flex:1;">다음 단계 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S3 체크리스트 ===== -->
+<div class="screen" id="s3">
+  <div class="sec-title">비행 전 상태 확인</div>
+  <div class="sec-sub">9개 항목 모두 ✅ OK 되어야 미션 시작 가능</div>
+
+  <div class="prog-wrap">
+    <div class="prog-bar h5" style="flex:1;"><div class="prog-fill" id="cpbar" style="width:0%"></div></div>
+    <div class="prog-txt" id="cpct">0/9</div>
+  </div>
+
+  <div id="clist"></div>
+
+  <div class="all-ok-box" id="cdone">
+    <div style="font-size:36px;">✅</div>
+    <div style="color:var(--green);font-size:16px;font-weight:700;margin-top:8px;">모든 항목 확인 완료!</div>
+    <div style="color:var(--accent);font-size:13px;margin-top:4px;">미션 준비 OK</div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="btn-row">
+      <button class="btn-back" onclick="go(2)">← 2단계</button>
+      <button class="btn-primary" id="btn3" onclick="go(4)" style="flex:1;" disabled>
+        다음 단계 →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S4 요약 ===== -->
+<div class="screen" id="s4">
+  <div class="sec-title">미션 요약</div>
+  <div class="sec-sub">설정 확인 후 미션을 시작하세요</div>
+
+  <div class="sum-card">
+    <div class="srow"><span class="sk">미션 유형</span><span class="sv" id="rm">—</span></div>
+    <div class="srow" id="rgrow" style="display:none;"><span class="sk">그리드 타입</span><span class="sv" id="rgt">—</span></div>
+    <div class="srow"><span class="sk">비행 고도</span><span class="sv" id="ra">—</span></div>
+    <div class="srow"><span class="sk">비행 속도</span><span class="sv" id="rs">—</span></div>
+    <div class="srow"><span class="sk">오버랩 (전/측)</span><span class="sv" id="ro">—</span></div>
+    <div class="srow"><span class="sk">카메라 각도</span><span class="sv" id="rca">—</span></div>
+    <div class="srow"><span class="sk">예상 해상도</span><span class="sv" style="color:var(--green);" id="rg">—</span></div>
+  </div>
+
+  <div style="font-size:13px;color:var(--text2);margin-bottom:9px;font-weight:600;">✏️ 설정 수정하기</div>
+  <div class="edit-btns">
+    <button class="edit-btn" onclick="go(1)"><span class="eico">🗺️</span>유형</button>
+    <button class="edit-btn" onclick="go(2)"><span class="eico">🎛️</span>파라미터</button>
+    <button class="edit-btn" onclick="go(3)"><span class="eico">✅</span>체크리스트</button>
+  </div>
+
+  <div class="warn-box">
+    <div class="warn-title">⚠️ 안전 주의사항</div>
+    <div class="warn-desc">앱은 장애물을 자동으로 회피하지 않습니다. 반드시 현지 드론 규정을 준수하고 안전한 환경에서만 사용하세요.</div>
+  </div>
+
+  <div class="bottom-bar">
+    <div class="btn-row">
+      <button class="btn-back" onclick="go(3)">← 3단계</button>
+      <button class="btn-primary dark" onclick="fly()" style="flex:1;">▶ 미션 시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S5 비행 시뮬레이션 ===== -->
+<div class="screen" id="s5">
+  <div class="phase-tabs">
+    <div class="ph-btn" id="ph1"><span class="phico">🛫</span>이륙</div>
+    <div class="ph-btn" id="ph2"><span class="phico">📸</span>미션</div>
+    <div class="ph-btn" id="ph3"><span class="phico">🛬</span>착륙</div>
+  </div>
+
+  <!-- 탑뷰 맵 -->
+  <div id="topmap">
+    <div id="topmapInner">
+      <div class="mgrid mgrid-h" style="top:25%;opacity:.3;"></div>
+      <div class="mgrid mgrid-h" style="top:50%;opacity:.3;"></div>
+      <div class="mgrid mgrid-h" style="top:75%;opacity:.3;"></div>
+      <div class="mgrid mgrid-v" style="left:25%;opacity:.3;"></div>
+      <div class="mgrid mgrid-v" style="left:50%;opacity:.3;"></div>
+      <div class="mgrid mgrid-v" style="left:75%;opacity:.3;"></div>
+
+      <svg id="missionSvg" viewBox="0 0 300 200" preserveAspectRatio="none"
+        style="position:absolute;top:0;left:0;width:100%;height:100%;">
         <g id="missionArea" opacity="0"></g>
-        <!-- 비행 경로 궤적 -->
-        <polyline id="trailLine" points="" fill="none" stroke="#1d9e75" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"/>
-        <!-- 웨이포인트 -->
+        <polyline id="trailLine" points="" fill="none" stroke="#1d9e75"
+          stroke-width="1.8" stroke-dasharray="5,3" opacity="0.7"/>
         <g id="waypoints"></g>
         <!-- 홈포인트 -->
-        <circle cx="145" cy="175" r="6" fill="none" stroke="#1d9e75" stroke-width="1.5"/>
-        <circle cx="145" cy="175" r="2" fill="#1d9e75"/>
-        <text x="145" y="192" text-anchor="middle" fill="#1d9e75" font-size="7">HOME</text>
+        <circle cx="150" cy="178" r="7" fill="none" stroke="#1d9e75" stroke-width="2"/>
+        <circle cx="150" cy="178" r="2.5" fill="#1d9e75"/>
+        <text x="150" y="195" text-anchor="middle" fill="#1d9e75"
+          font-size="8" font-family="sans-serif" font-weight="bold">HOME</text>
       </svg>
-      <!-- 드론 (탑뷰: 위에서 보는 십자 모양) -->
-      <div id="droneTop" style="position:absolute;width:24px;height:24px;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%) scale(0.1);transition:transform .1s,left .1s,top .1s;left:50%;top:87%;">
-        <svg viewBox="0 0 40 40" width="40" height="40">
-          <!-- 몸체 -->
-          <rect x="14" y="14" width="12" height="12" rx="3" fill="#1d9e75"/>
-          <!-- 팔 -->
-          <rect x="0" y="17" width="14" height="6" rx="3" fill="#0d3525"/>
-          <rect x="26" y="17" width="14" height="6" rx="3" fill="#0d3525"/>
-          <rect x="17" y="0" width="6" height="14" rx="3" fill="#0d3525"/>
-          <rect x="17" y="26" width="6" height="14" rx="3" fill="#0d3525"/>
-          <!-- 프로펠러 -->
-          <circle cx="5" cy="5" r="5" fill="#1d9e7566" stroke="#1d9e75" stroke-width="1"/>
-          <circle cx="35" cy="5" r="5" fill="#1d9e7566" stroke="#1d9e75" stroke-width="1"/>
-          <circle cx="5" cy="35" r="5" fill="#1d9e7566" stroke="#1d9e75" stroke-width="1"/>
-          <circle cx="35" cy="35" r="5" fill="#1d9e7566" stroke="#1d9e75" stroke-width="1"/>
-          <!-- 그림자 -->
-          <circle cx="20" cy="20" r="3" fill="#fff" opacity="0.3"/>
+
+      <!-- 드론 탑뷰 SVG -->
+      <div id="droneTop">
+        <svg viewBox="0 0 44 44" width="44" height="44">
+          <rect x="15" y="15" width="14" height="14" rx="4" fill="#1d9e75"/>
+          <rect x="0" y="18" width="15" height="7" rx="3.5" fill="#0d3525"/>
+          <rect x="29" y="18" width="15" height="7" rx="3.5" fill="#0d3525"/>
+          <rect x="18" y="0" width="7" height="15" rx="3.5" fill="#0d3525"/>
+          <rect x="18" y="29" width="7" height="15" rx="3.5" fill="#0d3525"/>
+          <circle cx="5"  cy="5"  r="5.5" fill="#1d9e7555" stroke="#1d9e75" stroke-width="1.2"/>
+          <circle cx="39" cy="5"  r="5.5" fill="#1d9e7555" stroke="#1d9e75" stroke-width="1.2"/>
+          <circle cx="5"  cy="39" r="5.5" fill="#1d9e7555" stroke="#1d9e75" stroke-width="1.2"/>
+          <circle cx="39" cy="39" r="5.5" fill="#1d9e7555" stroke="#1d9e75" stroke-width="1.2"/>
+          <circle cx="22" cy="22" r="3"   fill="#fff" opacity="0.2"/>
         </svg>
       </div>
-      <div id="phaseMapTxt" style="position:absolute;top:6px;right:8px;font-size:9px;color:#1d9e75;font-weight:600;background:#071810cc;padding:2px 8px;border-radius:10px;">이륙 준비</div>
-    </div>
-
-    <!-- 통계 -->
-    <div class="stat-grid">
-      <div class="stat-box"><div class="stat-lbl">고도</div><div class="stat-val" id="la">0m</div></div>
-      <div class="stat-box"><div class="stat-lbl">속도</div><div class="stat-val" id="ls">0 m/s</div></div>
-      <div class="stat-box"><div class="stat-lbl">촬영 사진</div><div class="stat-val" id="lp">0장</div></div>
-      <div class="stat-box"><div class="stat-lbl">배터리</div><div class="stat-val" id="lbat">100%</div></div>
-    </div>
-    <div style="margin-bottom:10px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-        <span style="color:#5a6880;font-size:10px;" id="phaseLabel">이륙 중...</span>
-        <span style="color:#1d9e75;font-size:10px;font-weight:500;" id="pct">0%</span>
-      </div>
-      <div style="background:#1a2230;border-radius:4px;height:5px;overflow:hidden;">
-        <div id="pbar" style="height:100%;background:#1d9e75;width:0%;transition:width .2s;border-radius:4px;"></div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;">
-      <button class="bs" onclick="go(4)" style="flex:1;font-size:11px;padding:9px;"><i class="ti ti-arrow-left"></i> 설정으로</button>
-      <button class="bs" onclick="reset()" style="flex:1;font-size:11px;padding:9px;"><i class="ti ti-refresh"></i> 처음부터</button>
+      <div id="mapLabel">📡 탑뷰</div>
+      <div id="phaseMapTxt">이륙 준비</div>
     </div>
   </div>
 
+  <div class="stat-grid">
+    <div class="stat-box"><div class="stat-lbl">고도</div><div class="stat-val" id="la">0m</div></div>
+    <div class="stat-box"><div class="stat-lbl">속도</div><div class="stat-val" id="ls">0 m/s</div></div>
+    <div class="stat-box"><div class="stat-lbl">촬영 사진</div><div class="stat-val" id="lp">0장</div></div>
+    <div class="stat-box"><div class="stat-lbl">배터리</div><div class="stat-val" id="lbat">100%</div></div>
+  </div>
+
+  <div class="mission-prog">
+    <div class="mission-prog-top">
+      <span class="mission-prog-label" id="phaseLabel">이륙 중...</span>
+      <span class="mission-prog-pct" id="pct">0%</span>
+    </div>
+    <div class="prog-bar h6"><div class="prog-fill" id="pbar" style="width:0%;"></div></div>
+  </div>
+
+  <div id="doneMsg">
+    <div style="font-size:40px;">🎉</div>
+    <div style="color:var(--green);font-size:17px;font-weight:700;margin-top:8px;">미션 완료!</div>
+    <div style="color:var(--accent);font-size:13px;margin-top:5px;line-height:1.5;">
+      사진을 3dsurvey 데스크탑으로 불러와<br>포인트 클라우드·정사영상 후처리를 시작하세요
+    </div>
+  </div>
+
+  <div class="sim-btns">
+    <button class="sim-btn" onclick="go(4)">← 설정으로</button>
+    <button class="sim-btn" onclick="reset()">↺ 처음부터</button>
   </div>
 </div>
-</div>
-</div>
+
+</div><!-- /app -->
 
 <script>
 var MN={grid:'GRID',polygon:'POLYGON',road:'ROAD',circle:'CIRCLE'};
 var TT={
-  grid:'직사각형 형태의 넓은 평지 매핑에 최적. 단일/이중 그리드 중 선택하세요.',
-  polygon:'논, 건물, 불규칙 지형 등 복잡한 형태 영역을 정밀하게 커버.',
-  road:'도로, 철도, 하천 등 선형 구조물 매핑 특화.',
-  circle:'건물, 탑 등 단일 객체를 360도 촬영하여 3D 모델 제작.'
+  grid:'직사각형 형태의 넓은 평지 매핑에 최적.\n단일/이중 그리드 중 선택하세요.',
+  polygon:'논, 건물, 불규칙 지형 등 복잡한 형태\n영역을 정밀하게 커버합니다.',
+  road:'도로, 철도, 하천 등 선형 구조물 매핑\n특화. 좁고 긴 영역을 효율적으로 커버.',
+  circle:'건물, 탑 등 단일 객체를 360도 모든\n각도에서 촬영 → 3D 모델 제작.'
 };
 var GT={
   single:'한 방향으로만 격자 비행. 설정이 간단하고 일반 평지 촬영에 적합. 비행 시간 짧음.',
-  double:'가로+세로 두 방향 교차 비행. 수직 구조물 포함 지역에서 품질이 크게 향상됩니다.'
+  double:'가로+세로 두 방향 교차 비행. 수직 구조물 포함 지역에서 모델 품질이 크게 향상됩니다.'
 };
-var ATIPS={90:'완전 수직(나디르). 정사영상·지도 제작 기본 설정.',80:'약간 기울인 각도. 건물 측면 일부 캡처.',70:'중간 경사각. 지형과 구조물 측면 함께 촬영.',60:'경사 촬영. 건물 파사드 디테일 향상.',50:'강한 경사각. 수직 구조물 3D 품질 향상.',45:'최대 경사각. 3D 모델링 정밀도 극대화.'};
+var ATIPS={
+  90:'완전 수직 촬영(나디르). 정사영상·지도 제작 기본 설정.',
+  80:'약간 기울인 각도. 건물 측면 일부 캡처 가능.',
+  70:'중간 경사각. 지형과 구조물 측면 함께 촬영.',
+  60:'경사 촬영. 건물 파사드 디테일 향상.',
+  50:'강한 경사각. 수직 구조물 3D 품질 크게 향상.',
+  45:'최대 경사각. 3D 모델링 정밀도 극대화.'
+};
 var CHECKS=[
-  {icon:'ti-compass',label:'GPS / 나침반',desc:'위성 10개 이상 수신 확인',ok:false},
-  {icon:'ti-camera',label:'카메라 연결',desc:'카메라 정상 연결 확인',ok:false},
-  {icon:'ti-home',label:'홈포인트 설정',desc:'이륙 지점 홈포인트 등록',ok:false},
-  {icon:'ti-device-laptop',label:'SD 카드',desc:'SD 카드 삽입 및 용량 확인',ok:false},
-  {icon:'ti-battery-2',label:'배터리 잔량',desc:'80% 이상 충전 확인',ok:false},
-  {icon:'ti-rotate-clockwise',label:'프로펠러',desc:'프로펠러 체결 상태 확인',ok:false},
-  {icon:'ti-drone',label:'비행 반경 (2km)',desc:'비행 제한 구역 이내 확인',ok:false},
-  {icon:'ti-target',label:'짐벌 캘리브레이션',desc:'짐벌 수평 보정 완료',ok:false},
-  {icon:'ti-upload',label:'미션 파일 업로드',desc:'비행 계획 업로드 완료',ok:false}
+  {ico:'🧭', label:'GPS / 나침반',      desc:'위성 10개 이상 수신 확인',  ok:false},
+  {ico:'📷', label:'카메라 연결',        desc:'카메라 정상 연결 확인',     ok:false},
+  {ico:'🏠', label:'홈포인트 설정',      desc:'이륙 지점 홈포인트 등록',   ok:false},
+  {ico:'💾', label:'SD 카드',            desc:'SD 카드 삽입 및 용량 확인', ok:false},
+  {ico:'🔋', label:'배터리 잔량',        desc:'80% 이상 충전 확인',        ok:false},
+  {ico:'🔩', label:'프로펠러',           desc:'프로펠러 체결 상태 확인',   ok:false},
+  {ico:'📶', label:'비행 반경 (2km)',    desc:'비행 제한 구역 이내 확인',  ok:false},
+  {ico:'🎯', label:'짐벌 캘리브레이션', desc:'짐벌 수평 보정 완료',       ok:false},
+  {ico:'📤', label:'미션 파일 업로드',   desc:'비행 계획 업로드 완료',     ok:false}
 ];
 
 var p={alt:80,spd:8,fo:80,so:70,ang:90};
-var sel=null,gtype='single',simTimer=null;
+var sel=null, gtype='single', simTimer=null;
 
 function pick(t){
   sel=t;
-  ['grid','polygon','road','circle'].forEach(function(k){document.getElementById('mc-'+k).classList.toggle('sel',k===t);});
+  ['grid','polygon','road','circle'].forEach(function(k){
+    document.getElementById('mc-'+k).classList.toggle('sel',k===t);
+  });
   document.getElementById('grid-sub').style.display=t==='grid'?'block':'none';
   var tip=document.getElementById('tip1');
   if(t!=='grid'){tip.style.display='block';tip.textContent=TT[t];}
   else{tip.style.display='none';setGrid(gtype);}
-  document.getElementById('btn1').style.display='block';
+  var b=document.getElementById('btn1');
+  b.disabled=false;b.style.opacity='1';
 }
+
 function setGrid(g){
   gtype=g;
   document.getElementById('gt-single').classList.toggle('on',g==='single');
   document.getElementById('gt-double').classList.toggle('on',g==='double');
   document.getElementById('grid-tip').textContent=GT[g];
 }
+
 function upd(k,v){
   p[k]=parseFloat(v);
   if(k==='alt') document.getElementById('valt').textContent=v+'m';
@@ -343,7 +545,9 @@ function upd(k,v){
   if(k==='fo')  document.getElementById('vfo').textContent=v+'%';
   if(k==='so')  document.getElementById('vso').textContent=v+'%';
   if(k==='ang'){
-    var lbl=v+'°'; if(v==='90') lbl='90° (수직)'; if(v==='45') lbl='45° (최대 경사)';
+    var lbl=v+'°';
+    if(v==='90') lbl='90° (수직)';
+    if(v==='45') lbl='45° (최대 경사)';
     document.getElementById('vang').textContent=lbl;
     document.getElementById('camline').style.transform='rotate('+(90-parseFloat(v))+'deg)';
     document.getElementById('camtip').textContent=ATIPS[parseInt(v)]||ATIPS[90];
@@ -351,48 +555,64 @@ function upd(k,v){
   document.getElementById('vgsd').textContent=(p.alt*0.0274).toFixed(1)+' cm/px';
   document.getElementById('vint').textContent=Math.round(p.alt*(1-p.fo/100))+'m';
 }
+
 function initCam(){
   document.getElementById('camtip').textContent=ATIPS[90];
   document.getElementById('camline').style.transform='rotate(0deg)';
 }
+
 function rcheck(){
   var h='',cnt=0;
   CHECKS.forEach(function(c,i){
     if(c.ok) cnt++;
     h+='<div class="citem" onclick="tc('+i+')">'+
-      '<div class="cicon'+(c.ok?' ok':'')+'"><i class="ti '+c.icon+'"></i></div>'+
-      '<div class="ctxt'+(c.ok?' ok':'')+'"><div style="font-size:12px;font-weight:500;">'+c.label+'</div>'+
-      '<div style="font-size:10px;margin-top:1px;color:'+(c.ok?'#3d7060':'#3d5060')+';">'+c.desc+'</div></div>'+
-      '<div class="cbadge'+(c.ok?' ok':'')+'">'+( c.ok?'<i class="ti ti-check" style="font-size:11px;"></i> OK':'대기')+'</div></div>';
+      '<div class="cico'+(c.ok?' ok':'')+'">'+c.ico+'</div>'+
+      '<div class="ctxt">'+
+        '<div class="ctxt-name'+(c.ok?' ok':'')+'">'+c.label+'</div>'+
+        '<div class="ctxt-desc">'+c.desc+'</div>'+
+      '</div>'+
+      '<div class="cbadge'+(c.ok?' ok':'')+'">'+
+        (c.ok?'✓ OK':'대기')+
+      '</div></div>';
   });
   document.getElementById('clist').innerHTML=h;
   document.getElementById('cpbar').style.width=Math.round(cnt/9*100)+'%';
   document.getElementById('cpct').textContent=cnt+'/9';
-  var all=cnt===9;
+  var all=(cnt===9);
   document.getElementById('cdone').style.display=all?'block':'none';
   var b=document.getElementById('btn3');
-  b.disabled=!all;b.style.opacity=all?'1':'.35';b.style.cursor=all?'pointer':'not-allowed';
+  b.disabled=!all;b.style.opacity=all?'1':'.33';
 }
+
 function tc(i){CHECKS[i].ok=!CHECKS[i].ok;rcheck();}
+
 function rsum(){
-  document.getElementById('rm').textContent=MN[sel]||'-';
+  document.getElementById('rm').textContent=MN[sel]||'—';
   var gr=document.getElementById('rgrow');
-  if(sel==='grid'){gr.style.display='flex';document.getElementById('rgt').textContent=gtype==='single'?'싱글 그리드':'더블 그리드';}
-  else gr.style.display='none';
+  if(sel==='grid'){
+    gr.style.display='flex';
+    document.getElementById('rgt').textContent=gtype==='single'?'싱글 그리드':'더블 그리드';
+  } else gr.style.display='none';
   document.getElementById('ra').textContent=p.alt+'m';
   document.getElementById('rs').textContent=p.spd+' m/s';
   document.getElementById('ro').textContent=p.fo+'% / '+p.so+'%';
-  var albl=p.ang+'°'; if(p.ang===90) albl='90° (수직)'; if(p.ang===45) albl='45° (최대 경사)';
+  var albl=p.ang+'°';
+  if(p.ang===90) albl='90° (수직)';
+  if(p.ang===45) albl='45° (최대 경사)';
   document.getElementById('rca').textContent=albl;
   document.getElementById('rg').textContent=(p.alt*0.0274).toFixed(1)+' cm/px';
 }
+
 function go(n){
-  for(var i=1;i<=5;i++) document.getElementById('s'+i).style.display=i===n?'block':'none';
+  for(var i=1;i<=5;i++){
+    var s=document.getElementById('s'+i);
+    s.style.display='none';s.classList.remove('active');
+  }
+  var cur=document.getElementById('s'+n);
+  cur.style.display='block';cur.classList.add('active');
+  window.scrollTo(0,0);
   for(var i=1;i<=4;i++){
-    var d=document.getElementById('d'+i);
-    d.style.background=i<=n&&n<=4?'#1d9e75':'#253040';
-    d.style.width=i===n?'16px':'5px';
-    d.style.borderRadius=i===n?'3px':'50%';
+    document.getElementById('d'+i).className='dot'+(i===n?' active':i<n?' done':'');
   }
   if(n===2) initCam();
   if(n===3) rcheck();
@@ -400,76 +620,63 @@ function go(n){
   if(n!==5&&simTimer){clearInterval(simTimer);simTimer=null;}
 }
 
-// ===== 미션 경로 생성 =====
-function getMissionWaypoints(type,gtype){
-  // 맵 뷰박스 290x200, 홈: (145,175)
+/* ===== 미션 웨이포인트 ===== */
+function getMissionWaypoints(type,gt){
   var pts=[];
   if(type==='grid'||type==='polygon'){
-    // 단일 그리드: 수평 래스터
-    var rows=gtype==='double'?6:4;
-    var x0=40,x1=250,y0=30,y1=150;
+    var rows=gt==='double'?7:5,x0=30,x1=270,y0=25,y1=155;
     for(var r=0;r<rows;r++){
       var y=y0+r*(y1-y0)/(rows-1);
-      if(r%2===0) pts.push([x0,y],[x1,y]);
-      else pts.push([x1,y],[x0,y]);
+      if(r%2===0) pts.push([x0,y],[x1,y]); else pts.push([x1,y],[x0,y]);
     }
-    if(gtype==='double'){
-      // 더블: 수직도 추가
-      var cols=4,cx0=40,cx1=250,cy0=30,cy1=150;
+    if(gt==='double'){
+      var cols=5;
       for(var c=0;c<cols;c++){
-        var x=cx0+c*(cx1-cx0)/(cols-1);
-        if(c%2===0) pts.push([x,cy0],[x,cy1]);
-        else pts.push([x,cy1],[x,cy0]);
+        var x=x0+c*(x1-x0)/(cols-1);
+        if(c%2===0) pts.push([x,y0],[x,y1]); else pts.push([x,y1],[x,y0]);
       }
     }
   } else if(type==='road'){
-    pts=[[40,100],[80,80],[130,90],[180,75],[240,85],[240,115],[180,105],[130,120],[80,110],[40,130]];
+    pts=[[30,100],[70,75],[120,88],[165,70],[210,85],[255,75],
+         [255,108],[210,115],[165,102],[120,118],[70,106],[30,128]];
   } else if(type==='circle'){
-    var cx=145,cy=90,r=60,steps=18;
+    var cx=150,cy=92,r=68,steps=22;
     for(var i=0;i<=steps;i++){
       var a=(i/steps)*Math.PI*2-Math.PI/2;
-      pts.push([cx+Math.cos(a)*r, cy+Math.sin(a)*r]);
+      pts.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r]);
     }
   }
   return pts;
 }
 
-// ===== 드론 탑뷰 설정 =====
-function setDronePos(lx,ly,scale){
-  var d=document.getElementById('droneTop');
-  // lx,ly: 맵 0~290, 0~200 → 백분율로 변환
-  var px=(lx/290*100)+'%';
-  var py=(ly/200*100)+'%';
-  d.style.left=px;
-  d.style.top=py;
-  d.style.transform='translate(-50%,-50%) scale('+scale+')';
-}
-
 function setPhase(ph){
   [1,2,3].forEach(function(i){
-    var el=document.getElementById('ph'+i);
-    el.className='ph-btn'+(i<ph?' done':i===ph?' active':'');
+    document.getElementById('ph'+i).className='ph-btn'+(i<ph?' done':i===ph?' active':'');
   });
 }
 
 function drawMissionArea(){
   var area=document.getElementById('missionArea');
-  var type=sel, gt=gtype;
-  if(type==='grid'||type==='polygon'){
-    area.innerHTML='<rect x="40" y="30" width="210" height="120" fill="#1d9e7511" stroke="#1d9e7544" stroke-width="1" stroke-dasharray="5,3" rx="2"/>';
-  } else if(type==='road'){
-    area.innerHTML='<rect x="30" y="65" width="230" height="70" fill="#1d9e7511" stroke="#1d9e7544" stroke-width="1" stroke-dasharray="5,3" rx="4"/>';
-  } else if(type==='circle'){
-    area.innerHTML='<circle cx="145" cy="90" r="65" fill="#1d9e7711" stroke="#1d9e7544" stroke-width="1" stroke-dasharray="5,3"/><circle cx="145" cy="90" r="5" fill="#1d9e75" opacity="0.7"/>';
+  if(sel==='grid'||sel==='polygon'){
+    area.innerHTML='<rect x="30" y="25" width="240" height="130" fill="#1d9e7511" stroke="#1d9e7555" stroke-width="1.2" stroke-dasharray="5,3" rx="3"/>';
+  } else if(sel==='road'){
+    area.innerHTML='<rect x="20" y="60" width="260" height="78" fill="#1d9e7711" stroke="#1d9e7555" stroke-width="1.2" stroke-dasharray="5,3" rx="5"/>';
+  } else if(sel==='circle'){
+    area.innerHTML='<circle cx="150" cy="92" r="72" fill="#1d9e7711" stroke="#1d9e7555" stroke-width="1.2" stroke-dasharray="5,3"/><circle cx="150" cy="92" r="5" fill="#1d9e75" opacity="0.8"/>';
   }
   area.setAttribute('opacity','1');
+}
+
+function setDronePos(lx,ly,scale){
+  var d=document.getElementById('droneTop');
+  d.style.left=(lx/300*100)+'%';
+  d.style.top=(ly/200*100)+'%';
+  d.style.transform='translate(-50%,-50%) scale('+scale+')';
 }
 
 function fly(){
   go(5);
   if(simTimer) clearInterval(simTimer);
-
-  // 초기화
   document.getElementById('trailLine').setAttribute('points','');
   document.getElementById('waypoints').innerHTML='';
   document.getElementById('missionArea').setAttribute('opacity','0');
@@ -477,118 +684,106 @@ function fly(){
   document.getElementById('pct').textContent='0%';
   document.getElementById('lp').textContent='0장';
   document.getElementById('lbat').textContent='100%';
+  document.getElementById('la').textContent='0m';
+  document.getElementById('ls').textContent='0 m/s';
+  document.getElementById('doneMsg').style.display='none';
 
-  var droneEl=document.getElementById('droneTop');
-  droneEl.style.transition='none';
-
-  // 홈 위치
-  var homeX=145, homeY=175;
-  setDronePos(homeX,homeY,0.1);
+  var drone=document.getElementById('droneTop');
+  drone.style.transition='none';
+  var homeX=150,homeY=178;
+  setDronePos(homeX,homeY,0.08);
   setPhase(1);
   document.getElementById('phaseLabel').textContent='이륙 중...';
   document.getElementById('phaseMapTxt').textContent='🛫 이륙';
-  document.getElementById('la').textContent='0m';
-  document.getElementById('ls').textContent='0 m/s';
 
-  var phase='takeoff';
-  var takeoffScale=0.1, missionScale=1.0, landingScale=1.0;
-  var curScale=0.1;
-  var tick=0, photos=0, bat=100;
+  var phase='takeoff',curScale=0.08,missionScale=1.0;
+  var tick=0,photos=0,bat=100;
   var wpts=getMissionWaypoints(sel,gtype);
-  var wIdx=0, wx=homeX, wy=homeY;
+  var wIdx=0,wx=homeX,wy=homeY;
   var trailPts=[[homeX,homeY]];
 
   setTimeout(function(){
-    droneEl.style.transition='transform .1s linear, left .1s linear, top .1s linear';
-  },50);
+    drone.style.transition='left .09s linear,top .09s linear,transform .12s linear';
+  },60);
 
   simTimer=setInterval(function(){
     tick++;
-    bat=Math.max(0,100-Math.round(tick*0.22));
+    bat=Math.max(0,100-Math.round(tick*0.2));
     document.getElementById('lbat').textContent=bat+'%';
 
     if(phase==='takeoff'){
-      curScale=Math.min(curScale+0.05, missionScale);
-      setDronePos(homeX, homeY, curScale);
-      var altNow=Math.round((curScale/missionScale)*p.alt);
-      document.getElementById('la').textContent=altNow+'m';
+      curScale=Math.min(curScale+0.042,missionScale);
+      setDronePos(homeX,homeY,curScale);
+      document.getElementById('la').textContent=Math.round((curScale/missionScale)*p.alt)+'m';
       document.getElementById('ls').textContent=Math.round(p.spd*0.4)+' m/s';
       var prog=Math.round((curScale/missionScale)*28);
       document.getElementById('pbar').style.width=prog+'%';
       document.getElementById('pct').textContent=prog+'%';
-
       if(curScale>=missionScale){
-        phase='mission';
-        drawMissionArea();
-        setPhase(2);
+        phase='mission';drawMissionArea();setPhase(2);
         document.getElementById('phaseLabel').textContent='미션 수행 중...';
         document.getElementById('phaseMapTxt').textContent='📸 촬영';
         document.getElementById('la').textContent=p.alt+'m';
         document.getElementById('ls').textContent=p.spd+' m/s';
-        wx=homeX; wy=homeY;
+        wx=homeX;wy=homeY;
       }
     }
     else if(phase==='mission'){
       if(wIdx<wpts.length){
-        var tx=wpts[wIdx][0], ty=wpts[wIdx][1];
-        var dx=tx-wx, dy=ty-wy, dist=Math.sqrt(dx*dx+dy*dy);
-        var step=4;
+        var tx=wpts[wIdx][0],ty=wpts[wIdx][1];
+        var dx=tx-wx,dy=ty-wy,dist=Math.sqrt(dx*dx+dy*dy),step=4.5;
         if(dist<step){wx=tx;wy=ty;wIdx++;}
-        else{wx+=dx/dist*step; wy+=dy/dist*step;}
+        else{wx+=dx/dist*step;wy+=dy/dist*step;}
         setDronePos(wx,wy,missionScale);
         trailPts.push([wx,wy]);
-        // 궤적
-        document.getElementById('trailLine').setAttribute('points',trailPts.map(function(p){return p[0]+','+p[1];}).join(' '));
-        // 사진
-        if(tick%12===0){photos++;document.getElementById('lp').textContent=photos+'장';}
-        // 웨이포인트 마커
-        if(wIdx>0&&wIdx<=wpts.length){
+        document.getElementById('trailLine').setAttribute('points',
+          trailPts.map(function(pt){return pt[0]+','+pt[1];}).join(' '));
+        if(tick%10===0){photos++;document.getElementById('lp').textContent=photos+'장';}
+        if(wIdx>0&&wIdx%3===0){
           var wp=document.createElementNS('http://www.w3.org/2000/svg','circle');
-          wp.setAttribute('cx',wx);wp.setAttribute('cy',wy);wp.setAttribute('r','2.5');
-          wp.setAttribute('fill','#1d9e75');wp.setAttribute('opacity','0.7');
+          wp.setAttribute('cx',wx);wp.setAttribute('cy',wy);
+          wp.setAttribute('r','2.5');wp.setAttribute('fill','#1d9e75');wp.setAttribute('opacity','0.6');
           document.getElementById('waypoints').appendChild(wp);
         }
         var prog=28+Math.round((wIdx/wpts.length)*54);
         document.getElementById('pbar').style.width=prog+'%';
         document.getElementById('pct').textContent=prog+'%';
-      } else {
-        // 미션 완료 → 홈으로 귀환
-        phase='return';
-      }
+      } else {phase='return';}
     }
     else if(phase==='return'){
-      // 홈으로 귀환
-      var dx=homeX-wx, dy=homeY-wy, dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist>4){wx+=dx/dist*4; wy+=dy/dist*4;}
-      else{wx=homeX; wy=homeY; phase='landing'; setPhase(3);
+      var dx=homeX-wx,dy=homeY-wy,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist>4.5){wx+=dx/dist*4.5;wy+=dy/dist*4.5;}
+      else{
+        wx=homeX;wy=homeY;phase='landing';
+        setPhase(3);
         document.getElementById('phaseLabel').textContent='착륙 중...';
         document.getElementById('phaseMapTxt').textContent='🛬 착륙';
-        document.getElementById('ls').textContent=Math.round(p.spd*0.3)+' m/s';
-        landingScale=1.0;
+        document.getElementById('ls').textContent=Math.round(p.spd*0.25)+' m/s';
+        curScale=missionScale;
       }
       setDronePos(wx,wy,missionScale);
       trailPts.push([wx,wy]);
-      document.getElementById('trailLine').setAttribute('points',trailPts.map(function(pt){return pt[0]+','+pt[1];}).join(' '));
-      document.getElementById('pbar').style.width='85%';
-      document.getElementById('pct').textContent='85%';
+      document.getElementById('trailLine').setAttribute('points',
+        trailPts.map(function(pt){return pt[0]+','+pt[1];}).join(' '));
+      document.getElementById('pbar').style.width='84%';
+      document.getElementById('pct').textContent='84%';
     }
     else if(phase==='landing'){
-      landingScale=Math.max(landingScale-0.045, 0.1);
-      setDronePos(homeX,homeY,landingScale);
-      var altNow=Math.round((landingScale/missionScale)*p.alt);
-      document.getElementById('la').textContent=altNow+'m';
-      var prog=85+Math.round((1-landingScale/missionScale)*15);
+      curScale=Math.max(curScale-0.038,0.08);
+      setDronePos(homeX,homeY,curScale);
+      document.getElementById('la').textContent=Math.round((curScale/missionScale)*p.alt)+'m';
+      var prog=84+Math.round((1-curScale/missionScale)*16);
       document.getElementById('pbar').style.width=Math.min(prog,100)+'%';
       document.getElementById('pct').textContent=Math.min(prog,100)+'%';
-
-      if(landingScale<=0.1){
+      if(curScale<=0.09){
         clearInterval(simTimer);simTimer=null;
         document.getElementById('la').textContent='0m';
         document.getElementById('ls').textContent='0 m/s';
         document.getElementById('pbar').style.width='100%';
         document.getElementById('pct').textContent='100%';
-        document.getElementById('phaseLabel').textContent='✅ 미션 완료!';
+        document.getElementById('phaseLabel').textContent='미션 완료!';
         document.getElementById('phaseMapTxt').textContent='✅ 완료';
+        document.getElementById('doneMsg').style.display='block';
         setPhase(4);
       }
     }
@@ -599,10 +794,14 @@ function reset(){
   if(simTimer){clearInterval(simTimer);simTimer=null;}
   sel=null;gtype='single';p={alt:80,spd:8,fo:80,so:70,ang:90};
   CHECKS.forEach(function(c){c.ok=false;});
-  ['grid','polygon','road','circle'].forEach(function(k){document.getElementById('mc-'+k).classList.remove('sel');});
+  ['grid','polygon','road','circle'].forEach(function(k){
+    document.getElementById('mc-'+k).classList.remove('sel');
+  });
   document.getElementById('grid-sub').style.display='none';
   document.getElementById('tip1').style.display='none';
-  document.getElementById('btn1').style.display='none';
+  var b=document.getElementById('btn1');b.disabled=true;b.style.opacity='.33';
   go(1);
 }
 </script>
+</body>
+</html>
